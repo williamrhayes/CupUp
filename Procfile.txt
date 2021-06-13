@@ -1,1 +1,1 @@
-web: sh setup.sh && gunicorn streamlit run cupup.py
+web: sh setup.sh && streamlit run cupup.py
