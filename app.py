@@ -14,6 +14,8 @@ def load_data():
     df_rwanda = df_all[df_all['Country'] == 'Rwanda']
     return df_all, df_rwanda
 
+# Generate a scatterplot of the
+# coffee scores
 def plot_data(df):
 
     df = df.sort_values('True Score', ascending=False)\
@@ -24,24 +26,16 @@ def plot_data(df):
                           y="True Score",
                           color='Country')
 
-    # add the line representing average
-    #fig.add_shape(type='line',
-    #            x0=0,
-    #            y0=np.mean(df['Score'].values),
-    #            x1=len(df),
-    #            y1=np.mean(df['Score'].values),
-    #            line=dict(color='Red',),
-    #            xref='x',
-    #            yref='y')
-
     return fig
 
+# Generate a bar chart displaying the difference between
+# the model prediction and the true score
 def compare_scores_bar_chart(df):
     fig = go.Figure(data=[
         go.Bar(name='Actual', x=['Score'], y=df['True Score']),
         go.Bar(name='Predicted', x=['Score'], y=df['Predicted Score'])
     ])
-    # Change the bar mode
+
     fig.update_layout(barmode='group',
                       yaxis_range=[84, 96],
                       yaxis_title="Cupping Score",
@@ -53,10 +47,8 @@ def compare_scores_bar_chart(df):
 
     return fig
 
-def map_data(df):
-    st.map(map_data.iloc[:160], zoom=1.5)
-
-
+# Read in the data into two distinct
+# dataframes (composite and Rwandan)
 df, df_rwanda = load_data()
 
 # Get the files necessary to predict the score
@@ -93,12 +85,15 @@ with center1:
 if ((judge_coffee or coffee_desc) and not
     (show_sample or display_stats)):
 
+    # Add pre-selected flavors to the guess
     if flavor_presets:
         coffee_desc = ', '.join(flavor_presets) + ', ' + coffee_desc
 
+    # If the user entered no input
     if coffee_desc == '':
         st.write('You have to describe your coffee before it can be evaluated by the judges!')
 
+    # If the user entered the right answer
     elif coffee_desc.lower() == 'rwanda deluxe coffee':
         _, center2, _ = st.beta_columns((1, 0.5, 1))
         with center2:
@@ -106,27 +101,47 @@ if ((judge_coffee or coffee_desc) and not
         results = pd.DataFrame(data={'Predicted Score': ['ERROR: Integer Overload'],
                                      'Competitors Defeated': ['ERROR: Integer Overload'],
                                      'Percentile': [101],
-                                     'Rank': ['Ultimate Coffee God for All Eternity']})
+                                     'Eternal Title': ['Ultimate Coffee God for All Eternity']})
         results_chart = st.table(results)
 
+    # SEND TO JUDGES BUTTON IS PRESSED
     elif judge_coffee:
+
+        # Predict the score using our model
         user_score = round(model.predict(coffee_desc),2)
+
+        # Calculate the score's percentile,
+        # rounded to two significant figures
         percentile = str(int(round(percentileofscore(df['True Score'].values, user_score), 0)))
+
+        # Calculate the number of cups this flavor
+        # profile defeated
         defeated_cups = int((1 - user_score / 100) * len(df))
+
+        # Calculate the all-time rank based on this score
         place = int((user_score / 100) * len(df))
 
+        # Consolidate results into a dataframe to display to
+        # the user
         results = pd.DataFrame(
             data={'Predicted Score': [user_score],
                   'Competitors Defeated': [defeated_cups],
-                  'Percentile': [percentile],
-                  'Rank': ['Chaff']
+                  'Percentile': [percentile]
                   })
+
+        # Find the place
         results.index += place
+
+        # Place the user's score in the center of the
+        # page as an output
         _, center2, _ = st.beta_columns((1, 0.5, 1))
         with center2:
             st.write(f'Score: {str(round(user_score, 2))}')
+
+        # Remind the user of their input
         st.write(f'Description: {coffee_desc}')
 
+        # Display the table of results
         st.table(results)
 
         left, center, right = st.beta_columns((0.5, 1, 0.5))
@@ -136,18 +151,28 @@ if ((judge_coffee or coffee_desc) and not
 # SHOW SAMPLE BUTTON
 if (show_sample and not
     (judge_coffee or display_stats)):
+
+    # If the "All Coffees" coffee preset is selected
     if dataset == 'All Coffees':
+        # Choose a random coffee from the dataset by index
         choice_index, = np.random.choice(df.index.values, 1)
+
+    # If the "Rwandan Coffees" preset is selceted in the sidebar
     elif dataset == 'Rwandan Coffees':
+        # Choose a random Rwandan coffee from the dataset by index
         choice_index, = np.random.choice(df_rwanda.index.values, 1)
         choice_index -= 1
 
     choice_values = df.iloc[choice_index]
     true_score = choice_values['True Score']
     predicted_score = round(choice_values['Predicted Score'], 2)
-    error = round(choice_values['Model Error'], 2)
     percentile = percentileofscore(df['True Score'].values, true_score)
 
+    # Calculate the error between what our model predicted the
+    # score would be and what the true score was
+    error = round(choice_values['Model Error'], 2)
+
+    # Display the True Score to the user
     _, center2, _ = st.beta_columns((1, 0.5, 1))
     with center2:
         st.write(f'Score: {str(round(true_score, 2))}')
@@ -164,9 +189,13 @@ if (show_sample and not
 
     st.plotly_chart(bar_fig)
 
+    # Show the country of origin on a map
     if dataset == 'All Coffees':
         st.title(f"Country of Origin: {df.iloc[choice_index].Country}")
         st.map(df.iloc[choice_index:choice_index+1], zoom=1)
+
+    ### WORK IN PROGRESS ###
+    # Show the specific origin region in Rwanda
     elif dataset == 'Rwandan Coffees':
         st.title(f"Country of Origin: {df.iloc[choice_index].Country}")
         st.map(df.iloc[choice_index:choice_index+1], zoom=6.5)
@@ -174,8 +203,10 @@ if (show_sample and not
 # TELL ME ABOUT THE DATA BUTTON
 if display_stats:
 
+    # Full write-up
+
     st.title('Where Does My Score Come From?')
-    st.markdown("When you enter a flavor description into the input bar above, it isn’t just spitting out a random number. The score you see is the output of a machine learning model trained on 20 years of competitive coffee-cupping data collected from the [Cup of Excellence website] (https://cupofexcellence.org/).")
+    st.markdown("When you enter a flavor description into the input bar above, it isn’t just spitting out a random number. The score you see is the output of a machine learning model trained on 15 years of competitive coffee-cupping data collected from the [Cup of Excellence website] (https://cupofexcellence.org/).")
 
     st.title('The Cup of Excellence')
     st.markdown("The Cup of Excellence is a charity that promotes the education of coffee farmers in developing countries throughout South America and Africa (see a map of these countries below).")
