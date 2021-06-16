@@ -1,3 +1,3 @@
 # CupUp
 
-Using coffee flavor descriptions to predict the cup's score
+Using coffee flavor descriptions to predict a coffee's cupping score
