@@ -9,7 +9,7 @@ from model.FlavorModel import FlavorModel
 
 @st.cache
 def load_data():
-    df_all = pd.read_csv(r'C:\Users\William\Documents\_UL\May\CupUp\CupOfExcellenceData.csv')
+    df_all = pd.read_csv('CupOfExcellenceData.csv')
     df_all.index += 1
     df_rwanda = df_all[df_all['Country'] == 'Rwanda']
     return df_all, df_rwanda
