@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 from scipy.stats import percentileofscore
 import pandas as pd
@@ -6,10 +8,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from model.FlavorModel import FlavorModel
 
+# Specify the path to get the data
+path = os.path.dirname(__file__)
 
 @st.cache
-def load_data():
-    df_all = pd.read_csv('CupOfExcellenceData.csv')
+def load_data(path=path):
+    path = os.path.dirname(__file__)
+    df_all = pd.read_csv(f"{path}/CupOfExcellenceData.txt", delimiter="|")
     df_all.index += 1
     df_rwanda = df_all[df_all['Country'] == 'Rwanda']
     return df_all, df_rwanda
@@ -52,9 +57,8 @@ def compare_scores_bar_chart(df):
 df, df_rwanda = load_data()
 
 # Get the files necessary to predict the score
-current_path = r'C:\Users\William\Documents\_UL\May\CupUp\model'
-count_vectorizer = current_path + "\CountVectorizer.cv"
-xgb_model = current_path + "\Model.xgb"
+count_vectorizer = f"{path}/model/CountVectorizer.cv"
+xgb_model = f"{path}/model/Model.xgb"
 
 # Construct the model object
 model = FlavorModel(count_vectorizer, xgb_model)
