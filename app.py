@@ -9,12 +9,12 @@ import plotly.graph_objects as go
 from model.FlavorModel import FlavorModel
 import nltk
 
-nltk.download('stopwords')
 # Specify the path to get the data
 path = os.path.dirname(__file__)
 
 @st.cache
 def load_data(path=path):
+    nltk.download('stopwords')
     path = os.path.dirname(__file__)
     df_all = pd.read_csv(f"{path}/CupOfExcellenceData.txt", delimiter="|")
     df_all.index += 1
