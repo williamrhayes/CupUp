@@ -23,10 +23,12 @@ def load_data(path=path):
 
 # Generate a scatterplot of the
 # coffee scores
-def plot_data(df):
+def plot_data(df, user_data=''):
+
 
     df = df.sort_values('True Score', ascending=False)\
-           .reset_index(drop=True)
+           .reset_index(drop=True).copy()
+
     df['All-Time Rank'] = df.index + 1
 
     fig = px.scatter(df, x="All-Time Rank",
@@ -217,7 +219,7 @@ if display_stats:
     st.title('The Cup of Excellence')
     st.markdown("The Cup of Excellence is a charity that promotes the education of coffee farmers in developing countries throughout South America and Africa (see a map of these countries below).")
     st.map(df.drop_duplicates('Country'))
-    st.markdown("Each year the Cup of Excellence hosts a competition where coffees are rigorously tested and scored in a six-round vetting process. The select few coffees that make it to the end of these six rounds are chosen to become a 'Cup of Excellence'.")
+    st.markdown("Each year the Cup of Excellence hosts a competition where coffees are rigorously tested and scored in an [intense vetting process](https://cupofexcellence.org/rules-protocols/). In order to be considered a ‘Cup of Excellence’ a cup of coffee must score higher than 86 out of 100 points in four consecutive rounds among a variety of judges. The top 10 cups from these competitions are scored one last time to finalize its score and ranking. After coffees are scored the green beans are put up for auction.")
     st.markdown("These competitions have been running since 1999 and in addition to enriching the lives of coffee farmers, have also produced a [good chunk of data](https://cupofexcellence.org/farm-directory/) about what makes a phenomenal cup of coffee. To improve our understanding of what makes world-class coffee, we consolidated this data and asked a simple question...")
 
     st.title("Can a Coffee's Flavor Profile Be Used to Accurately Predict Its Cupping Score?")
