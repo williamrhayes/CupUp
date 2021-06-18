@@ -7,7 +7,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from model.FlavorModel import FlavorModel
+import nltk
 
+nltk.download('stopwords')
 # Specify the path to get the data
 path = os.path.dirname(__file__)
 
