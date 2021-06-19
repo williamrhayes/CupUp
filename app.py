@@ -23,17 +23,48 @@ def load_data(path=path):
 
 # Generate a scatterplot of the
 # coffee scores
-def plot_data(df, user_data=''):
+def plot_data(df, user_score=None, sample_index=None):
 
+    # Create a copy of the dataframe
+    # and specify the data's origin
+    df = df.copy()
+    df['Coffee From'] = 'COE Data'
 
-    df = df.sort_values('True Score', ascending=False)\
-           .reset_index(drop=True).copy()
+    # Add the user data to a copy of
+    # the composite dataset
+    if user_score:
+        user_data = {'Farmer': 'You', 'True Score': user_score, 'Coffee From': 'You'}
+        df = df.append(user_data, ignore_index=True)
+
+    elif sample_index:
+        df.at[sample_index, 'Coffee From'] = df.iloc[sample_index].Farmer
+
+    df = df.sort_values('True Score', ascending=False).reset_index(drop=True).copy()
 
     df['All-Time Rank'] = df.index + 1
 
-    fig = px.scatter(df, x="All-Time Rank",
-                          y="True Score",
-                          color='Country')
+    # Use the tag so the user can easily spot
+    # where their coffee lies among other
+    # competing coffees
+    if user_score:
+        fig = px.scatter(df, x="All-Time Rank", y="True Score",
+                         color='Coffee From', color_discrete_sequence=["#595959", "#A1FFFF"])
+
+    elif sample_index:
+        fig = px.scatter(df, x="All-Time Rank", y="True Score",
+                         color='Coffee From', color_discrete_sequence=["#595959", "#A1FFFF"])
+
+    else:
+        fig = px.scatter(df, x="All-Time Rank", y="True Score", color='Country')
+
+    # Add a plot title
+    fig.update_layout(
+        title={
+            'text': "Coffee Sore Distribution",
+            'y': 0.925,
+            'x': 0.475,
+            'xanchor': 'center',
+            'yanchor': 'top'})
 
     return fig
 
@@ -99,7 +130,10 @@ if ((judge_coffee or coffee_desc) and not
 
     # If the user entered no input
     if coffee_desc == '':
-        st.write('You have to describe your coffee before it can be evaluated by the judges!')
+        _, center2, _ = st.beta_columns((1, 0.5, 1))
+        with center2:
+            st.write('Score: 85.50')
+        st.write('No flavor input, displaying the baseline score')
 
     # If the user entered the right answer
     elif coffee_desc.lower() == 'rwanda deluxe coffee':
@@ -110,13 +144,17 @@ if ((judge_coffee or coffee_desc) and not
                                      'Competitors Defeated': ['ERROR: Integer Overload'],
                                      'Percentile': [101],
                                      'Eternal Title': ['Ultimate Coffee God for All Eternity']})
-        results_chart = st.table(results)
+        results_chart = st.write(results)
 
     # SEND TO JUDGES BUTTON IS PRESSED
     elif judge_coffee:
 
         # Predict the score using our model
         user_score = round(model.predict(coffee_desc),2)
+
+        # Calculate the score change from
+        # the model's baseline prediction of 85.5
+        change = str(round(user_score - 85.5, 2))
 
         # Calculate the score's percentile,
         # rounded to two significant figures
@@ -133,6 +171,7 @@ if ((judge_coffee or coffee_desc) and not
         # the user
         results = pd.DataFrame(
             data={'Predicted Score': [user_score],
+                  'Baseline Improvement': [change],
                   'Competitors Defeated': [defeated_cups],
                   'Percentile': [percentile]
                   })
@@ -150,9 +189,12 @@ if ((judge_coffee or coffee_desc) and not
         st.write(f'Description: {coffee_desc}')
 
         # Display the table of results
-        st.table(results)
+        st.write(results)
 
-        left, center, right = st.beta_columns((0.5, 1, 0.5))
+        # Plot the user's result
+        # along with all the other coffees
+        fig = plot_data(df, user_score=user_score)
+        st.plotly_chart(fig)
 
 
 
@@ -164,11 +206,13 @@ if (show_sample and not
     if dataset == 'All Coffees':
         # Choose a random coffee from the dataset by index
         choice_index, = np.random.choice(df.index.values, 1)
+        sample_index = choice_index
 
     # If the "Rwandan Coffees" preset is selceted in the sidebar
     elif dataset == 'Rwandan Coffees':
         # Choose a random Rwandan coffee from the dataset by index
-        choice_index, = np.random.choice(df_rwanda.index.values, 1)
+        choice_index, = np.random.choice(df[df['Country'] == 'Rwanda'].index.values, 1)
+        sample_index = choice_index - 1
         choice_index -= 1
 
     choice_values = df.iloc[choice_index]
@@ -188,10 +232,15 @@ if (show_sample and not
     st.write(f'Description: {choice_values.Characteristics}')
 
     choice_df = df.iloc[choice_index:choice_index+1]
-    chart = st.table(choice_df
+    chart = st.write(choice_df
                      [['Country', 'Year', 'Farmer',
                        'Predicted Score', 'True Score',
                        'Model Error']])
+
+    # Plot the sample results
+    # along with all the other coffees
+    fig = plot_data(df, sample_index=sample_index)
+    st.plotly_chart(fig)
 
     bar_fig = compare_scores_bar_chart(choice_df)
 
@@ -232,7 +281,7 @@ if display_stats:
     st.markdown("In order to track our progress (and make sure the flavors actually improve our prediction accuracy) we needed to choose a baseline model. A baseline model is the simplest prediction method we can reasonably make. For this analysis our baseline model was to predict that any coffee, regardless of its flavor description, would get the average score every time. Not a very exciting model, but that's what makes it a great starting point. When we guess the average for each cup of coffee regardless of its flavor description we have an **average error of 1.48 points**.")
 
     st.title("Building Our Model")
-    st.markdown("We built (and deployed) our model using Python. Specifically we used a word-stemmer to represent multiple words with the same meaning (such as peach, peaches, and peachy) as one word (peachi). We then used a count-vectorizer to turn the words into a vector (where each word could be represented as a number) and XGBoost to predict the score of the coffee from this vector. A few other deep-learning techniques were attempted however none could out-perform XGBoost. Once we decided to proceed with XGBoost, we attempted hundreds of different XGBoost parameter combinations to optimize for the lowest mean absolute error.")
+    st.markdown("We built (and deployed) our model using Python. Specifically we used a word-stemmer to represent multiple words with the same meaning (such as peach, peaches, and peachy) as one word (peachi). We then used a count-vectorizer to turn the words into a vector (where each word could be represented as a number) and XGBoost to predict the score of the coffee from this vector. A few other deep-learning techniques were attempted however none could out-perform XGBoost. Once we decided to proceed with XGBoost, we attempted hundreds of different parameter combinations to optimize for the lowest mean absolute error.")
 
     st.title("Evaluating Our Model (Results)")
     st.markdown('We achieved a Mean Absolute Error of 1.16 points on our test dataset using the XGBoost model. This means that on average, this prediction is off by about 1.16 points. Based on subjective flavor profiles alone **we were able to improve our prediction accuracy from the baseline by about 22%**.')
@@ -242,7 +291,7 @@ if display_stats:
     st.markdown("* First, the scores may fluctuate over time. Some years may just be judged more harshly than others and it is difficult to say whether a cup that scored 94 points in 1999 would score 94 points today.")
     st.markdown("* Second, the scores from this dataset are skewed much higher than the normal every-day cup of coffee. After all, at the end of the day each coffee in this dataset is considered a “Cup of Excellence”. This means that the output is already assuming you are already a top-notch coffee connoisseur.")
     st.markdown("* Third, the Cup of Excellence is not the be-all end-all judgement of excellent coffee. There may be flavors, aromas, and textures that the judges don’t like that many people do like. Coffee tasting will always be a subjective experience and this model is better at predicting what these judges might enjoy.")
-    st.markdown("There are many more objective factors that could dramatically improve our prediction accuracy. Factors such as coffee variety (I’m looking at you Geisha!), growing altitude, and country of origin could offer significant insight into how to accurately predict the score of a given coffee. Of course our most promising results are kept an internal secret so that Rwanda Deluxe Coffee can gain a competitive edge. We appreciate your interest and hope you enjoyed reading about our research. We want to learn from the best and hope to bring world-class coffee directly to you.")
+    st.markdown("There are many more objective factors that could dramatically improve our prediction accuracy. Factors such as, growing altitude, country of origin, and coffee variety (I’m looking at you Geisha!) could offer significant insight into how to accurately predict the score of a given coffee. Of course our most promising results are kept an internal secret so that Rwanda Deluxe Coffee can gain a competitive edge. We appreciate your interest and hope you enjoyed reading about our research.")
 
 
 # Rigirous testing rules for COE - https://cupofexcellence.org/rules-protocols/
