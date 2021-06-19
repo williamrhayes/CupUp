@@ -1,5 +1,6 @@
 import os
-
+import time
+import pickle
 import streamlit as st
 from scipy.stats import percentileofscore
 import pandas as pd
@@ -15,7 +16,6 @@ path = os.path.dirname(__file__)
 @st.cache
 def load_data(path=path):
     nltk.download('stopwords')
-    path = os.path.dirname(__file__)
     df_all = pd.read_csv(f"{path}/CupOfExcellenceData.txt", delimiter="|")
     df_all.index += 1
     df_rwanda = df_all[df_all['Country'] == 'Rwanda']
@@ -28,7 +28,7 @@ def plot_data(df, user_score=None, sample_index=None):
     # Create a copy of the dataframe
     # and specify the data's origin
     df = df.copy()
-    df['Coffee From'] = 'COE Data'
+    df['Coffee From'] = 'Other COE Data'
 
     # Add the user data to a copy of
     # the composite dataset
@@ -36,8 +36,10 @@ def plot_data(df, user_score=None, sample_index=None):
         user_data = {'Farmer': 'You', 'True Score': user_score, 'Coffee From': 'You'}
         df = df.append(user_data, ignore_index=True)
 
+    # Hilight where the sample is
+    # in the coffee score distribution
     elif sample_index:
-        df.at[sample_index, 'Coffee From'] = df.iloc[sample_index].Farmer
+        df.at[sample_index, 'Coffee From'] = f"{df.iloc[sample_index].Country}, {df.iloc[sample_index].Year}"
 
     df = df.sort_values('True Score', ascending=False).reset_index(drop=True).copy()
 
@@ -47,18 +49,21 @@ def plot_data(df, user_score=None, sample_index=None):
     # where their coffee lies among other
     # competing coffees
     if user_score:
-        fig = px.scatter(df, x="All-Time Rank", y="True Score",
+        fig = px.bar(df, x="All-Time Rank", y="True Score",
                          color='Coffee From', color_discrete_sequence=["#595959", "#A1FFFF"])
 
     elif sample_index:
-        fig = px.scatter(df, x="All-Time Rank", y="True Score",
+        fig = px.bar(df, x="All-Time Rank", y="True Score",
                          color='Coffee From', color_discrete_sequence=["#595959", "#A1FFFF"])
 
     else:
-        fig = px.scatter(df, x="All-Time Rank", y="True Score", color='Country')
+        fig = px.bar(df, x="All-Time Rank", y="True Score", color='True Score')
+
+    fig.update_traces(marker_line_width=0)
 
     # Add a plot title
     fig.update_layout(
+        yaxis_range=[84, 95],
         title={
             'text': "Coffee Sore Distribution",
             'y': 0.925,
