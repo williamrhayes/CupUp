@@ -291,7 +291,7 @@ if display_stats:
     st.markdown("When you enter a flavor description into the input bar above, it isn’t just spitting out a random number. The score you see is the output of a machine learning model trained on 15 years of competitive coffee-cupping data collected from the [Cup of Excellence website] (https://cupofexcellence.org/).")
 
     st.title('The Cup of Excellence')
-    st.markdown("The Cup of Excellence is a charity that promotes the education of coffee farmers in developing countries throughout South America and Africa (see a map of these countries below).")
+    st.markdown("The Cup of Excellence is a charity that promotes the education of coffee farmers in countries throughout Africa and the Americas. ")
     st.map(df.drop_duplicates('Country'))
     st.markdown("Each year the Cup of Excellence hosts a competition where coffees are rigorously tested and scored in an [intense vetting process](https://cupofexcellence.org/rules-protocols/). In order to be considered a ‘Cup of Excellence’ a cup of coffee must score higher than 86 out of 100 points in four consecutive rounds among a variety of judges. The top 10 cups from these competitions are scored one last time to finalize their score and ranking. After coffees are scored the green beans are put up for auction.")
     st.markdown("These competitions have been running since 1999 and in addition to enriching the lives of coffee farmers, have also produced a [good chunk of data](https://cupofexcellence.org/farm-directory/) about what makes a phenomenal cup of coffee. To improve our understanding of what makes world-class coffee, we consolidated this data and asked a simple question...")
