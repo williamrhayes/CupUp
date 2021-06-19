@@ -1,6 +1,4 @@
 import os
-import time
-import pickle
 import streamlit as st
 from scipy.stats import percentileofscore
 import pandas as pd
