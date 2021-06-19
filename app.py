@@ -87,6 +87,26 @@ def compare_scores_bar_chart(df):
 
     return fig
 
+# Generate a bar chart displaying the difference between
+# the baseline error and the XGBoost model error
+# Found in the ("Results" section)
+def compare_errors_bar_chart():
+    fig = go.Figure(data=[
+        go.Bar(name='Baseline', x=['Baseline Error'], y=[1.48]),
+        go.Bar(name='ML Model', x=['Model Error'], y=[1.16])
+    ])
+
+    fig.update_layout(barmode='group',
+                      yaxis_range=[0, 2],
+                      yaxis_title="MAE (Cupping Points)",
+                      title={'text': "Mean Absolute Error (MAE) Comparison",
+                             'y':0.9,
+                             'x':0.475,
+                             'xanchor': 'center',
+                             'yanchor': 'top'})
+
+    return fig
+
 # Read in the data into two distinct
 # dataframes (composite and Rwandan)
 df, df_rwanda = load_data()
@@ -285,6 +305,8 @@ if display_stats:
 
     st.title("Evaluating Our Model (Results)")
     st.markdown('We achieved a Mean Absolute Error of 1.16 points on our test dataset using the XGBoost model. This means that on average, this prediction is off by about 1.16 points. Based on subjective flavor profiles alone **we were able to improve our prediction accuracy from the baseline by about 22%**.')
+    fig = compare_errors_bar_chart()
+    st.plotly_chart(fig)
 
     st.title("Conclusion")
     st.markdown("There certainly seems to be a method to the madness found in coffee flavor descriptions. We were able to make more educated guesses about the quality of the coffee based on its description alone. Of course, there are some important notes to keep in mind here:")
