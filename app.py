@@ -63,7 +63,7 @@ def plot_data(df, user_score=None, sample_index=None):
     fig.update_layout(
         yaxis_range=[84, 95],
         title={
-            'text': "Coffee Sore Distribution",
+            'text': "Coffee Score Distribution",
             'y': 0.925,
             'x': 0.475,
             'xanchor': 'center',
